@@ -44,8 +44,6 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> initialize() async{
     sharedPreferences = await SharedPreferences.getInstance(); 
-   // sharedPreferences!.clear();
-  //  sharedPreferences!.setInt("Id", 0);
 
     var androidInitilize = new AndroidInitializationSettings('app_icon');
     var iOSinitilize = new IOSInitializationSettings();
@@ -146,15 +144,31 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           String s = DateTime.now().toIso8601String();
-          Navigator.push(context, MaterialPageRoute(builder: (context) {
-            int id = sharedPreferences!.getInt("Id") ?? 0;
-            sharedPreferences!.setInt("Id", id + 1);
-            return AddEditTask(Task("Untitled",false,s,s,"",id), addTask,flutterLocalNotificationsPlugin,false);  
-          }));
+          int id = sharedPreferences!.getInt("Id") ??  0;
+          sharedPreferences!.setInt("Id", id + 1);
+          Navigator.of(context).push(_createRoute(AddEditTask(Task("Untitled",false,s,s,"",id), addTask,flutterLocalNotificationsPlugin,false))); 
         },
         child: Center(child: Icon(Icons.add)),
         backgroundColor: LightTheme.accent,
       ),
+    );
+  }
+
+  Route _createRoute(Widget widget) {
+    return PageRouteBuilder(
+      pageBuilder: (context, animation, secondaryAnimation) => widget,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
+        const curve = Curves.ease;
+
+        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      },
     );
   }
 
