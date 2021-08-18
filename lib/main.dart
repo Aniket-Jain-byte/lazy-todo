@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:lazy_todo/Routes/addEditTask.dart';
 import 'package:lazy_todo/Theme/light_theme.dart';
 import 'package:lazy_todo/Utils/classes.dart';
@@ -39,8 +40,17 @@ class _HomePageState extends State<HomePage> {
     initialize();
   }
 
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+
   Future<void> initialize() async{
     sharedPreferences = await SharedPreferences.getInstance(); 
+   // sharedPreferences!.clear();
+  //  sharedPreferences!.setInt("Id", 0);
+
+    var androidInitilize = new AndroidInitializationSettings('app_icon');
+    var iOSinitilize = new IOSInitializationSettings();
+    var initializationsSettings = new InitializationSettings(android:androidInitilize, iOS: iOSinitilize);
+    await flutterLocalNotificationsPlugin.initialize(initializationsSettings);
   }
 
   void addTask(Task task) {
@@ -136,7 +146,11 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           String s = DateTime.now().toIso8601String();
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AddEditTask(Task("Untitled",false,s,s,""), addTask)));
+          Navigator.push(context, MaterialPageRoute(builder: (context) {
+            int id = sharedPreferences!.getInt("Id") ?? 0;
+            sharedPreferences!.setInt("Id", id + 1);
+            return AddEditTask(Task("Untitled",false,s,s,"",id), addTask,flutterLocalNotificationsPlugin,false);  
+          }));
         },
         child: Center(child: Icon(Icons.add)),
         backgroundColor: LightTheme.accent,
@@ -151,15 +165,17 @@ class _HomePageState extends State<HomePage> {
       margin: EdgeInsets.only(bottom: 10),
       child: ElevatedButton(
         onPressed: () {
-          int i = -1;
-          for(int k = 0; k < tasks.length; ++k) {
+          int i = -1,k;
+          for(k = 0; k < tasks.length; ++k) {
             if(tasks[k].completed == task.completed) ++i;
             if(i == index) break;
           }
           if(!task.completed) Navigator.push(context, MaterialPageRoute(builder: (context) => AddEditTask(task, (Task task) {
-            tasks.removeAt(i);
-            addTask(task);
-          })));
+            setState(() {
+              tasks[k] = task;
+              sharedPreferences!.setString("Tasks", Task.encode(tasks));
+            });
+          },flutterLocalNotificationsPlugin,true)));
         }, 
         child: Row(
           children: [
@@ -211,6 +227,7 @@ class _HomePageState extends State<HomePage> {
                     }
                     if(i == index) {
                       setState(() {
+                        flutterLocalNotificationsPlugin.cancel(tasks[k].id);
                         tasks.removeAt(k);
                         sharedPreferences!.setString("Tasks", Task.encode(tasks));
                       });

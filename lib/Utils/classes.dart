@@ -9,6 +9,7 @@ class Task {
   String dueTime;
   String remindTime;
   String note;
+   int id;
 
   Task(
     this.title,
@@ -16,6 +17,7 @@ class Task {
     this.dueTime,
     this.remindTime,
     this.note,
+    this.id,
   );
 
   static String encode(List<Task> tasks) => jsonEncode(
@@ -29,6 +31,7 @@ class Task {
     "dueTime" : task.dueTime,
     "remindTime" : task.remindTime,
     "note" : task.note,
+    "id" : task.id
   };
 
   static List<Task> decode(String tasks) => 
@@ -41,7 +44,8 @@ class Task {
       jsonData["completed"],
       jsonData["dueTime"],
       jsonData["remindTime"],
-      jsonData["note"]
+      jsonData["note"],
+      jsonData["id"]
     );
   }
 

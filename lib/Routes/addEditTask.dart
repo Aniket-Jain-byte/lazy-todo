@@ -1,29 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker/flutter_datetime_picker.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:lazy_todo/Theme/light_theme.dart';
 import 'package:lazy_todo/Utils/classes.dart';
 
 
 class AddEditTask extends StatefulWidget {
-  Task task;
 
-  AddEditTask(this.task,this.addEditTask);
+  Task task;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   void Function(Task) addEditTask;
+  bool isEdit;
+
+  AddEditTask(this.task,this.addEditTask,this.flutterLocalNotificationsPlugin,this.isEdit);
 
   @override
-  _AddEditTaskState createState() => _AddEditTaskState(task,addEditTask);
-}
+  _AddEditTaskState createState() => _AddEditTaskState(task,addEditTask,flutterLocalNotificationsPlugin,isEdit);
+} 
 
 class _AddEditTaskState extends State<AddEditTask> {
 
   Task task;
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin;
   void Function(Task) addEditTask;
-  _AddEditTaskState(this.task,this.addEditTask);
+  bool isEdit;
+
+  _AddEditTaskState(this.task,this.addEditTask,this.flutterLocalNotificationsPlugin,this.isEdit);
 
   @override
   Widget build(BuildContext context) {
-
+    String titleText = isEdit ? "Edit" : "Add";
     return Scaffold(
       backgroundColor: LightTheme.background,
       body: LayoutBuilder(
@@ -39,7 +46,7 @@ class _AddEditTaskState extends State<AddEditTask> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.fromLTRB(0,50,0,0),
-                        child: Text("Add Task", style: TextStyle(color: LightTheme.text,fontSize: 24),),
+                        child: Text("$titleText Task", style: TextStyle(color: LightTheme.text,fontSize: 24),),
                       ),
                       SizedBox(height: MediaQuery.of(context).size.height * 0.07,),
                       Container(
@@ -183,7 +190,15 @@ class _AddEditTaskState extends State<AddEditTask> {
         }
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
+        onPressed: () async{
+          var androidDetails = new AndroidNotificationDetails( "Channel ID", "Desi programmer", "This is my channel");
+          var iSODetails = new IOSNotificationDetails();
+          var generalNotificationDetails = new NotificationDetails(android:androidDetails,iOS: iSODetails);
+
+          if(isEdit) flutterLocalNotificationsPlugin.cancel(task.id);
+          print(getDateFormattedString(DateTime.parse(task.remindTime)));
+          flutterLocalNotificationsPlugin.schedule(task.id, task.title,"This task is due" ,DateTime.parse(task.remindTime), generalNotificationDetails);
+
           addEditTask(task);
           Navigator.pop(context);
         },
