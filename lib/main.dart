@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -28,6 +29,8 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
 
   SharedPreferences? sharedPreferences;
+  ExpandableController _todoTasksController = ExpandableController(initialExpanded: true);
+  ExpandableController _completedTasksController = ExpandableController(initialExpanded: true);
   bool showToDoTasks = true;
   bool showCompletedTasks = true;
 
@@ -61,7 +64,6 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: LightTheme.background,
       body: LayoutBuilder(
@@ -99,34 +101,38 @@ class _HomePageState extends State<HomePage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 TextButton(
-                                  onPressed: () {setState(() => showToDoTasks = !showToDoTasks);},
+                                  onPressed: () {setState(() => _todoTasksController.toggle());},
                                   child: Row(
                                     children: [
                                       Text("Tasks",style: TextStyle(color: LightTheme.text,fontSize: 20),),
                                       SizedBox(width: 10,),
-                                      Icon(showToDoTasks == true ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right_outlined,color: LightTheme.text,size: 20,)
+                                      Icon(_todoTasksController.expanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right_outlined,color: LightTheme.text,size: 20,)
                                     ]
                                   )
                                 ),
                                 SizedBox(height: 20,),
-                                if(showToDoTasks) Column (
-                                  children: todoTasks.asMap().entries.map((e) => getTaskCard(e.key, e.value,context)).toList(),
+                                ExpandablePanel(
+                                  controller: _todoTasksController,
+                                  collapsed: Container(), 
+                                  expanded: Column ( children: todoTasks.asMap().entries.map((e) => getTaskCard(e.key, e.value,context)).toList(),),
                                 ),
-                                
+
                                 SizedBox(height: 15,),
                                 TextButton(
-                                  onPressed: () {setState(() => showCompletedTasks = !showCompletedTasks);},
+                                  onPressed: () {setState(() => _completedTasksController.toggle());},
                                   child: Row(
                                     children: [
                                       Text("Completed Tasks",style: TextStyle(color: LightTheme.text,fontSize: 20),),
                                       SizedBox(width: 10,),
-                                      Icon(showCompletedTasks == true ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right_outlined,color: LightTheme.text,size: 20,)
+                                      Icon(_completedTasksController.expanded ? Icons.keyboard_arrow_down : Icons.keyboard_arrow_right_outlined,color: LightTheme.text,size: 20,)
                                     ]
                                   )
                                 ),
                                 SizedBox(height: 20,),
-                                if(showCompletedTasks) Column(
-                                  children: completedTasks.asMap().entries.map((e) => getTaskCard(e.key, e.value, context)).toList(),
+                                ExpandablePanel(
+                                  controller: _completedTasksController,
+                                  collapsed: Container(),
+                                  expanded: Column(children: completedTasks.asMap().entries.map((e) => getTaskCard(e.key, e.value, context)).toList(),),
                                 )
                               ],
                             ),
@@ -155,23 +161,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Route _createRoute(Widget widget) {
-    return PageRouteBuilder(
-      pageBuilder: (context, animation, secondaryAnimation) => widget,
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        const begin = Offset(0.0, 1.0);
-        const end = Offset.zero;
-        const curve = Curves.ease;
-
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
-        return SlideTransition(
-          position: animation.drive(tween),
-          child: child,
-        );
-      },
-    );
-  }
 
   Widget getTaskCard(int index, Task task, BuildContext context) {
     return Container(
