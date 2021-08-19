@@ -5,6 +5,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:lazy_todo/Routes/addEditTask.dart';
 import 'package:lazy_todo/Theme/light_theme.dart';
+import 'package:lazy_todo/Utils/animations.dart';
 import 'package:lazy_todo/Utils/classes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -146,7 +147,7 @@ class _HomePageState extends State<HomePage> {
           String s = DateTime.now().toIso8601String();
           int id = sharedPreferences!.getInt("Id") ??  0;
           sharedPreferences!.setInt("Id", id + 1);
-          Navigator.of(context).push(_createRoute(AddEditTask(Task("Untitled",false,s,s,"",id), addTask,flutterLocalNotificationsPlugin,false))); 
+          Navigator.of(context).push(bottomToUpRoute(AddEditTask(Task("Untitled",false,s,s,"",id), addTask,flutterLocalNotificationsPlugin,false))); 
         },
         child: Center(child: Icon(Icons.add)),
         backgroundColor: LightTheme.accent,
